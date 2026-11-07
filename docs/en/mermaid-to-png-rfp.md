@@ -211,5 +211,8 @@ engine and does not hold distributed tools.
    are accepted. An output that is the file a redirected standard input reads is refused. A source over the read bound
    is reported in the engine's form. The lineless refusal form, an overstated test description and a reference to a
    test that did not exist were corrected in the documents and tests. Not changed — writing to a FIFO with no reader
-   blocks (as a shell's `>` does), `-scale 1e-300` gives a 1×1 image (within the range), and `-o /dev/stdout` gets the
-   path line after the PNG (the README says to use `-o -` for standard output).
+   blocks (as a shell's `>` does), and `-scale 1e-300` gives a 1×1 image (within the range). A third pass over the
+   fixes made `-o /dev/stdout` behave as `-o -` (no path line, and no reopen that could truncate on Linux) and
+   compared standard input with the output only when it is a regular file. Accepted — a failure while writing
+   leaves the output truncated (as `>` does; exit 3 and the README say so), and `-o --` reads `--` as the separator
+   (a usage error, never a wrong write).

@@ -61,9 +61,15 @@ mermaid-to-png/
 - The output is opened and written in place (`O_CREATE|O_TRUNC`, 0666 less
   the umask), like a shell's `>`. Writing beside it and renaming was tried
   and removed: it replaced read-only files, widened modes and broke links.
-- An output that is the input (by path or `SameFile`) or the file a
+- An output that is the input (by path or `SameFile`) or the regular file a
   redirected standard input reads is a usage error. A pipe cannot be told
-  apart and is not checked.
+  apart and is not checked; a device on stdin (/dev/null) is not compared.
+- An output that is the file standard output writes to (`-o /dev/stdout`) is
+  treated as `-o -`: written through the stream, no path line, no reopen
+  (which on Linux could truncate a file stdout appends to).
+- Accepted: a failure while writing leaves the output truncated (as `>`
+  does; exit 3 says so), and `-o --` takes `--` as the separator, not the
+  value (a usage error, never a wrong write).
 - There is no terminal detection: the standard library cannot tell a tty from
   `/dev/null` (both are character devices). Reading a terminal waits, as `cat`
   does.

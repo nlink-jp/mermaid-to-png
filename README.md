@@ -90,7 +90,9 @@ mermaid-to-png -font /path/to/font.ttc -font-name "Face Name" diagram.mmd
   path is replaced in place, keeping its permissions and links, and a
   read-only one is refused. An output that is the input itself — by name,
   through a link, or the file standard input is redirected from — is refused.
-  For standard output use `-o -`, which prints only the PNG.
+  `-o -` (or `-o /dev/stdout`) writes only the PNG to standard output. As
+  with `>`, a run that fails while writing (exit 3) leaves the output file
+  unusable.
 
 ### Exit status
 
