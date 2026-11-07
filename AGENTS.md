@@ -17,12 +17,17 @@ MCP server.
 ## Commands
 
 ```bash
-make build           # dist/mermaid-to-png (signed when a Developer ID is in the keychain)
-make test            # go test ./... + tests/validate-skill.sh
-make check           # vet + test + build
-make package         # 4 platforms, archives, darwin notarized, skill zip
-make verify-release  # also runs verify-skill-zip
-make install-skill   # unpack the built skill zip into ~/.claude/skills
+make build            # dist/mermaid-to-png (signed when a Developer ID is in the keychain)
+make test             # go test ./... + tests/validate-skill.sh
+make vet              # go vet ./...
+make check            # vet + test + build
+make package          # 4 platforms, archives, darwin notarized, skill zip
+make verify-release   # also runs verify-skill-zip
+make brew             # after package: generate the formula into the local homebrew-tap checkout
+make brew-print       # render the formula to stdout only
+make install-skill    # unpack the built skill zip into ~/.claude/skills
+make uninstall-skill
+make clean
 ```
 
 ## Structure
@@ -32,8 +37,10 @@ mermaid-to-png/
 ├── main.go                 # calls cmd.Execute()
 ├── cmd/
 │   ├── root.go             # Execute, Run, Version
-│   ├── run.go              # flags (NewFlagSet), exit statuses, read → engine → write
+│   ├── run.go              # flags (NewFlagSet, parseArgs), exit statuses, read → engine → write
+│   ├── root_test.go        # --version and -version agree
 │   ├── run_test.go         # CLI behaviour against the real engine
+│   ├── pin_test.go         # behaviour the release review found unguarded
 │   └── skill_test.go       # holds the skill to the flags, statuses and engine
 ├── mermaid-to-png/SKILL.md # the bundled skill (name = directory)
 ├── tests/validate-skill.sh # org skill validator, vendored byte-identical
@@ -45,17 +52,24 @@ mermaid-to-png/
 
 - Go's `flag` package reads `-version` and `--version` as the same flag; the
   Homebrew formula's test runs `--version`.
+- `flag` stops at the first non-flag, so `parseArgs` resumes after each file
+  name: `file -o out` works. Everything after `--` is a file name.
 - The input is read with a bound of 3 × `MaxTextSize` bytes: a UTF-16 unit is
   at most 3 bytes of UTF-8, so a longer input is certainly over the engine's
-  limit (exit 1 without calling it). The engine judges anything shorter.
-- A regular-file output is written beside the destination and renamed in. A
-  destination that exists and is not a regular file (`/dev/null`, a pipe) is
-  written in place — a rename cannot replace it.
+  limit and is refused in the engine's form without calling it. The engine
+  judges anything shorter.
+- The output is opened and written in place (`O_CREATE|O_TRUNC`, 0666 less
+  the umask), like a shell's `>`. Writing beside it and renaming was tried
+  and removed: it replaced read-only files, widened modes and broke links.
+- An output that is the input (by path or `SameFile`) or the file a
+  redirected standard input reads is a usage error. A pipe cannot be told
+  apart and is not checked.
 - There is no terminal detection: the standard library cannot tell a tty from
   `/dev/null` (both are character devices). Reading a terminal waits, as `cat`
   does.
-- Drawing tests skip where Hiragino is absent (`needFont`); off macOS run them
-  with a font or expect skips.
+- `defaultFont` is a variable so `TestDefaultFontMissing` can stand in for a
+  system without Hiragino. Drawing tests skip where Hiragino is absent
+  (`needFont`).
 - `TestSkillFlagsExist` drops spans fenced by four backticks before pairing
   single backticks; the skill shows the ```` ```mermaid ```` fence that way.
 - `install-skill` / `uninstall-skill` remove `$(SKILLS_DEST)/mermaid-to-png`

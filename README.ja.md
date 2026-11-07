@@ -13,6 +13,12 @@ mermaid を描くコマンドが無いと、図の画像を頼まれたエージ
 ヘッドレス Chrome、CDN の mermaid.js、npx 経由の mmdc、あるいは図の手描きです。
 mermaid-render は手元で mermaid を描けますが、ライブラリです。これはそのコマンドです。
 
+## 描けるもの
+
+mermaid-render が描く 7 種類です: flowchart（`flowchart`・`graph`）、シーケンス図、ER 図、状態遷移図、ガントチャート、
+円グラフ、マインドマップ。白地のカードに描きます。見た目の指定（`style`・`classDef`・テーマ）は読み捨てます。
+エンジンが何をなぜ拒むかは、エンジンの [README](https://github.com/nlink-jp/mermaid-render#readme) にあります。
+
 ## 入れ方
 
 コマンドとスキルは別々に入れます。Homebrew とバイナリのアーカイブにはコマンドだけが入っています。
@@ -54,6 +60,7 @@ macOS（arm64、署名・公証済み）、Linux（amd64・arm64）、Windows（
 ```bash
 mermaid-to-png diagram.mmd                 # → diagram.png。書いたパスを印字する
 mermaid-to-png -o figure.png diagram.mmd
+mermaid-to-png diagram.mmd -o figure.png   # フラグはファイル名の後でもよい
 cat diagram.mmd | mermaid-to-png -o figure.png
 mermaid-to-png -o - diagram.mmd > figure.png
 mermaid-to-png -scale 1 diagram.mmd        # 小さめの画像
@@ -69,37 +76,36 @@ mermaid-to-png -font /path/to/font.ttc -font-name "Face Name" diagram.mmd
 | `-bold path`・`-bold-name name` | 太字のフェイス（既定は本文と同じ） |
 | `-version` | 版数を印字する |
 
-入力は図のソースだけです（```` ```mermaid ```` の囲みは付けません）。出力が入力そのものになる指定は拒みます。
-通常のファイルへは、出力先の隣に書いてから名前を付け替えるので、失敗しても書きかけのファイルは残りません。
+- 入力は図のソースだけです（```` ```mermaid ```` の囲みは付けません）。ファイル名を省くか `-` を指定すると標準入力から読み、
+  メッセージでは `<stdin>` と書きます。端末から読むときは、`cat` と同じく入力を待ちます。
+  `--` の後の引数はすべてファイル名として扱います。
+- 出力はシェルの `>` と同じように書きます。その場所に既にあるファイルはその場で置き換わり、権限やリンクはそのまま残ります。
+  読み取り専用のファイルには書きません。出力が入力そのもの（同じ名前、リンク越し、標準入力のリダイレクト元）になる指定は拒みます。
+  標準出力へは `-o -` を使ってください。PNG だけを書きます。
 
 ### 終了コード
 
 | コード | 意味 |
 |---|---|
 | 0 | PNG を書いた |
-| 1 | エンジンが図を拒んだ — `mermaid-to-png: <入力>:<行>: <種類>: <説明>` |
+| 1 | エンジンが図を拒んだ — `mermaid-to-png: <入力>:<行>: <種類>: <説明>`。特定の行に原因が無いとき（上限超え、空のソース）は `<入力>: <種類>: <説明>` |
 | 2 | フラグや引数の誤り（続けて使い方の行を出す） |
 | 3 | 入力・出力・フォントを読めない、書けない、読み込めない |
 
 `<種類>` はエンジンのもので、`syntax error`・`unsupported diagram type`・
 `unsupported construct`（上限超えと、どのフォントにも無い文字もここ）・`layout fault` のどれかです。
 
-## 描けるもの
-
-mermaid-render が描く 7 種類です: flowchart（`flowchart`・`graph`）、シーケンス図、ER 図、状態遷移図、ガントチャート、
-円グラフ、マインドマップ。白地のカードに描きます。見た目の指定（`style`・`classDef`・テーマ）は読み捨てます。
-エンジンが何をなぜ拒むかは、エンジンの [README](https://github.com/nlink-jp/mermaid-render#readme) にあります。
-
 ## スキル（同梱）: mermaid-to-png
 
 このリポジトリには **mermaid-to-png** スキルが付いています。中身は次のとおりです。
 このコマンドで図を描く場面、終了コードごとの対処、エンジンが構文を拒んだときの書き換え方
-（ラベルの中の HTML、入れ子の subgraph、フォントに無い文字）、そして report-studio やページ自身の mermaid.js に
-任せる場面。入れ方は[入れ方](#スキル)にあります。
+（ラベルの中の HTML や Markdown、入れ子の subgraph、フォントに無い文字）、そして report-studio やページ自身の
+mermaid.js に任せる場面。入れ方は[入れ方](#スキル)にあります。
 
-`make test` は組織のスキル検証も走らせます。`cmd/skill_test.go` はスキルをコマンドに縛ります。スキルが名指しする
-フラグ・終了コード・エンジンの種類・図の種類はすべて実在しなければならず、スキルが勧める書き換えは、スキルのとおりに
-拒まれ、受け入れられなければなりません。
+`make test` は組織のスキル検証も走らせます。`cmd/skill_test.go` はスキルをコマンドに縛ります。次のことを確かめます。
+スキルがバッククォートで書くフラグはすべて実在する。終了コードの表は、コマンドが返すコードとちょうど一致する。
+エンジンの 4 種類のエラーと、エンジンが描く図の種類のキーワードをすべて挙げている。未対応として挙げた種類は本当に拒まれる。
+勧める書き換えは、スキルのとおりにエンジンに拒まれ、受け入れられる。
 
 ## ビルド
 

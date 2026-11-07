@@ -15,6 +15,13 @@ assembles one on the spot: headless Chrome, mermaid.js from a CDN, mmdc
 through npx, or a figure drawn by hand. mermaid-render already draws mermaid
 locally, but it is a library. This is its command.
 
+## What it draws
+
+The 7 types mermaid-render draws: flowchart (`flowchart`, `graph`),
+sequence, ER, state, gantt, pie and mindmap, on a white card. Styling
+(`style`, `classDef`, themes) is set aside. What the engine refuses, and why,
+is in its [README](https://github.com/nlink-jp/mermaid-render#readme).
+
 ## Installation
 
 The command and the skill install separately: Homebrew and the binary
@@ -59,6 +66,7 @@ that into `~/.claude/skills/` (`SKILLS_DEST=<dir>` for another directory).
 ```bash
 mermaid-to-png diagram.mmd                 # → diagram.png, prints its path
 mermaid-to-png -o figure.png diagram.mmd
+mermaid-to-png diagram.mmd -o figure.png   # flags may follow the file name
 cat diagram.mmd | mermaid-to-png -o figure.png
 mermaid-to-png -o - diagram.mmd > figure.png
 mermaid-to-png -scale 1 diagram.mmd        # smaller image
@@ -74,17 +82,22 @@ mermaid-to-png -font /path/to/font.ttc -font-name "Face Name" diagram.mmd
 | `-bold path`, `-bold-name name` | the face for bold text (default: the body face) |
 | `-version` | print the version |
 
-The input is the diagram's source only (no ```` ```mermaid ```` fence). An
-output that would be the input itself is refused. A regular file is written
-beside its destination and renamed into place, so a failed run leaves no
-half-written file.
+- The input is the diagram's source only (no ```` ```mermaid ```` fence).
+  With no file name, or `-`, it is read from standard input, which is named
+  `<stdin>` in messages; reading a terminal waits for input, as `cat` does.
+  After `--` every argument is a file name.
+- The output is written the way a shell's `>` writes: a file already at that
+  path is replaced in place, keeping its permissions and links, and a
+  read-only one is refused. An output that is the input itself — by name,
+  through a link, or the file standard input is redirected from — is refused.
+  For standard output use `-o -`, which prints only the PNG.
 
 ### Exit status
 
 | Status | Meaning |
 |---|---|
 | 0 | the PNG was written |
-| 1 | the engine refused the diagram — `mermaid-to-png: <input>:<line>: <kind>: <message>` |
+| 1 | the engine refused the diagram — `mermaid-to-png: <input>:<line>: <kind>: <message>`, or `<input>: <kind>: <message>` when no one line is at fault (a limit, an empty source) |
 | 2 | a flag or argument (the usage line follows) |
 | 3 | the input, the output or the font cannot be read, written or loaded |
 
@@ -92,26 +105,21 @@ half-written file.
 `unsupported construct` (also a limit exceeded, or a character no font can
 draw) or `layout fault`.
 
-## What it draws
-
-The 7 types mermaid-render draws: flowchart (`flowchart`, `graph`),
-sequence, ER, state, gantt, pie and mindmap, on a white card. Styling
-(`style`, `classDef`, themes) is set aside. What the engine refuses, and why,
-is in its [README](https://github.com/nlink-jp/mermaid-render#readme).
-
 ## Skill (bundled): mermaid-to-png
 
 The repository bundles the **mermaid-to-png** skill: when to draw a diagram
 with this command, how to act on each exit status, what to rewrite when the
-engine refuses a construct (HTML in a label, a nested subgraph, a character
-the font lacks), and when the work belongs to report-studio or to a page's
-own mermaid.js instead. How to install it is under
+engine refuses a construct (HTML or Markdown in a label, a nested subgraph, a
+character the font lacks), and when the work belongs to report-studio or to a
+page's own mermaid.js instead. How to install it is under
 [Installation](#the-skill).
 
-`make test` runs the organization's skill validator, and `cmd/skill_test.go` holds the
-skill to the command: every flag, exit status, engine kind and type it names
-must exist, and the rewrites it recommends must be refused and accepted as it
-says.
+`make test` runs the organization's skill validator. `cmd/skill_test.go`
+holds the skill to the command: every flag it writes in backticks must exist,
+its exit-status table must list exactly the statuses the command returns, it
+must name all four engine kinds and every type keyword the engine draws, the
+types it gives as unsupported must be refused, and each rewrite it
+recommends must be refused and accepted by the engine as it says.
 
 ## Build
 

@@ -10,4 +10,11 @@ All notable changes to this project are documented here. The format follows
 
 - First release: `mermaid-to-png`, a command-line front end to
   [mermaid-render](https://github.com/nlink-jp/mermaid-render) that turns one
-  mermaid diagram into one PNG with no browser.
+  mermaid diagram into one PNG with no browser. Reads a file or standard
+  input, writes a file or standard output (`-o -`), takes flags before or
+  after the file name, and exits 0 (written), 1 (the engine refused the
+  diagram, as `<input>:<line>: <kind>: <message>`), 2 (usage) or 3 (input,
+  output or font).
+- The bundled `mermaid-to-png` skill: when to draw with this command, how to
+  act on each exit status and engine refusal, and when the work belongs to
+  report-studio. Released as its own asset, `mermaid-to-png-vX.Y.Z.zip`.

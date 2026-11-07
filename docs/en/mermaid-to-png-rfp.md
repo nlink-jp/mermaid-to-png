@@ -133,6 +133,9 @@ None (no network, outside service or credentials). The only Go dependency is `gi
 - The README's Installation section leads the skill with the app's registration, keeps unzipping into
   `~/.claude/skills/` as the fallback, and describes `make install-skill` as the development loop (CONVENTIONS §Skill
   project scaffold).
+- Watch the repository (`gh api -X PUT /repos/nlink-jp/mermaid-to-png/subscription -F subscribed=true`) and set its
+  About (description, topics) (CONVENTIONS §Scaffold checklist). Name the skill zip in the release notes (its name is
+  close to the source zip GitHub attaches).
 - One independent verification pass before release.
 
 **Independently reviewable points**: the RFP / end of Phase 1 / before release.
@@ -201,3 +204,12 @@ engine and does not hold distributed tools.
      an ER diagram) and asked. When the user chose the flowchart, it redrew it and made the PNG.
    - In neither scene did it reach for Chrome, npx, mmdc, a CDN, kroki, mermaid.ink or hand-drawn SVG (checked against
      the tool calls in the session transcripts). The skill's wording was not changed.
+9. **Independent review of the implementation (2026-11-08, two passes)**: fixed — writing beside the output and
+   renaming it in (which I added in Phase 1; §2 does not have it) replaced read-only files, widened modes to 0644,
+   ignored the umask, broke links and broke `-o /dev/stdout` → the output is written in place like a shell's `>` (the
+   PNG is complete in memory before the file is opened, so only the disk can fail midway). Flags after the file name
+   are accepted. An output that is the file a redirected standard input reads is refused. A source over the read bound
+   is reported in the engine's form. The lineless refusal form, an overstated test description and a reference to a
+   test that did not exist were corrected in the documents and tests. Not changed — writing to a FIFO with no reader
+   blocks (as a shell's `>` does), `-scale 1e-300` gives a 1×1 image (within the range), and `-o /dev/stdout` gets the
+   path line after the PNG (the README says to use `-o -` for standard output).

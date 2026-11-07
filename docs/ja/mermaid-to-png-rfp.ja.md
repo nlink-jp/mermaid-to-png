@@ -126,6 +126,9 @@ mermaid-to-png -version
   スキルをツールの一部として載せる（「bundled mermaid-to-png skill」、CONVENTIONS §Skill bundled with a tool）。
 - README の入れ方の節は、スキルについてアプリでの登録を先に、`~/.claude/skills/` への展開を代わりの手段として書き、
   `make install-skill` は開発用の手順として書く（CONVENTIONS §Skill project scaffold）。
+- リポジトリの watch（`gh api -X PUT /repos/nlink-jp/mermaid-to-png/subscription -F subscribed=true`）と About
+  （description・topics）を設定する（CONVENTIONS §Scaffold checklist）。リリースノートの本文でスキルの zip を名指しする
+  （GitHub が付けるソースの zip と名前が近いため）。
 - リリース前に独立検証を 1 本。
 
 **単独でレビューできる区切り**: RFP／第 1 段階の終わり／リリース前。
@@ -191,3 +194,10 @@ mermaid-to-png -version
      求めた。利用者が flowchart を選ぶと、描き直して PNG にした。
    - どちらの場面でも、Chrome・npx・mmdc・CDN・kroki・mermaid.ink・SVG の手描きには一度も手を伸ばさなかった
      （セッション記録のツール呼び出しで確認）。スキルの文面は変えていない。
+9. **実装の独立検証（2026-11-08、2 本）**: 直したもの — 出力の隣に書いて名前を付け替える書き方（第 1 段階で私が足した。
+   §2 には無い）が読み取り専用のファイルを置き換え、権限を 0644 に広げ、umask を無視し、リンクを切り、`-o /dev/stdout` を
+   壊していた → シェルの `>` と同じくその場に書く形に戻した（PNG はメモリ上で作り終えてから開くので、途中で壊れる余地は
+   ディスクの異常だけ）。ファイル名の後のフラグを受け付けた。標準入力のリダイレクト元と同じ出力を拒んだ。上限超えの印字を
+   エンジンの形に揃えた。行の無い拒否の形、テストの言い過ぎ、存在しないテストへの言及を文書とテストで正した。
+   直さなかったもの — 読み手のいない FIFO で止まる（シェルの `>` と同じ）、`-scale 1e-300` で 1×1（範囲内）、
+   `-o /dev/stdout` でパスの行が付く（標準出力は `-o -` と README に書く）。
