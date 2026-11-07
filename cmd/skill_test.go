@@ -127,6 +127,8 @@ func TestSkillRewritesHold(t *testing.T) {
 	}{
 		{"HTML in a label", "flowchart TD\n  A[\"<b>太字</b>\"] --> B\n", "flowchart TD\n  A[\"太字\"] --> B\n"},
 		{"line break", "", "flowchart TD\n  A[\"行1<br>行2\"] --> B\n"},
+		{"Markdown string", "flowchart TD\n  A[\"`**md**`\"] --> B\n", "flowchart TD\n  A[\"md\"] --> B\n"},
+		{"markdown formatting", "mindmap\n  root\n    **b**\n", "mindmap\n  root\n    b\n"},
 		{"nested subgraph", "flowchart TD\n  subgraph X\n    subgraph Y\n      a --> b\n    end\n  end\n",
 			"flowchart TD\n  subgraph X\n    a\n  end\n  subgraph Y\n    b\n  end\n  a --> b\n"},
 		{"glyph", "flowchart TD\n  A[次へ ➔] --> B\n", "flowchart TD\n  A[次へ →] --> B\n"},

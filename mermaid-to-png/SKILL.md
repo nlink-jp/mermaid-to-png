@@ -15,8 +15,10 @@ flags; this skill is when to use it and how to act on what it reports.
 1. **Write the diagram to a file** in your working directory, such as
    `diagram.mmd` (the source only, without the ```` ```mermaid ```` fence).
 2. **Draw it**: `mermaid-to-png diagram.mmd` writes `diagram.png` beside it
-   and prints the path. `-o name.png` names the output; the source can also
-   come on standard input with `-o` (`-o -` writes the PNG to standard output).
+   and prints the path. `-o name.png` names the output (before or after the
+   file name); a PNG already at that path is replaced, so give `-o` another
+   name to keep one. The source can also come on standard input with `-o`,
+   and `-o -` writes the PNG to standard output.
 3. **Look at the PNG** by reading it before you hand it on or put it into a
    document. Read the labels: the image is the diagram the reader gets.
 4. **Act on the exit status**:
@@ -24,7 +26,7 @@ flags; this skill is when to use it and how to act on what it reports.
 | Status | Meaning | Next |
 |---|---|---|
 | 0 | written | use the path it printed |
-| 1 | the engine refused the diagram | the message reads `<input>:<line>: <kind>: <message>`; see below |
+| 1 | the engine refused the diagram | the message reads `<input>:<line>: <kind>: <message>` (`<input>: <kind>: <message>` when no one line is at fault, as with a limit); see below |
 | 2 | a flag or argument | the usage line follows the message |
 | 3 | the input, the output or the font | the message names which |
 
@@ -46,6 +48,8 @@ The engine draws 7 types: `flowchart` (also `graph`), `sequenceDiagram`,
   The ones that come up:
   - *HTML in a label* (`<b>`, `<code>`, …): write the label as plain text.
     `<br>` line breaks are drawn.
+  - *Markdown string* or *markdown formatting* (backquoted Markdown in a
+    flowchart label, `**bold**` in a mindmap): write the label as plain text.
   - *nested subgraph*: keep one level of subgraphs; split the inner group into
     a subgraph of its own beside the others.
   - *no font can draw* a character: replace it with one the font has
