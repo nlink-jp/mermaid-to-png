@@ -333,11 +333,24 @@ func TestNotDrawnWritesNothing(t *testing.T) {
 	}
 }
 
+// Both sides of the read bound give the same message form: exactly
+// maxInputBytes reaches the engine, which refuses it; one more byte is
+// refused while reading, before the engine.
 func TestTooLong(t *testing.T) {
-	// Over maxInputBytes: refused while reading, before the engine.
-	r := runCLI(t, "flowchart TD\n"+strings.Repeat("A-->B\n", maxInputBytes/6+1), "-o", "-")
-	if r.code != ExitNotDrawn || !strings.Contains(r.stderr, "longer than mermaid draws") {
-		t.Errorf("exit %d, stderr %q", r.code, r.stderr)
+	needFont(t) // the font is loaded before the engine reads the source
+	src := func(n int) string {
+		head := "flowchart TD\n"
+		return head + strings.Repeat("a", n-len(head))
+	}
+	at := runCLI(t, src(maxInputBytes), "-o", "-")
+	want := "mermaid-to-png: <stdin>: " + mr.UnsupportedConstruct.String() + ": the source is "
+	if at.code != ExitNotDrawn || !strings.HasPrefix(at.stderr, want) {
+		t.Errorf("at the bound: exit %d, %q, want prefix %q", at.code, at.stderr, want)
+	}
+	over := runCLI(t, src(maxInputBytes+1), "-o", "-")
+	want = "mermaid-to-png: <stdin>: " + mr.UnsupportedConstruct.String() + ": the source is over "
+	if over.code != ExitNotDrawn || !strings.HasPrefix(over.stderr, want) {
+		t.Errorf("over the bound: exit %d, %q, want prefix %q", over.code, over.stderr, want)
 	}
 }
 

@@ -162,7 +162,7 @@ func convert(o *options, args []string, stdin io.Reader, stdout io.Writer) error
 	if fromStdin && !toStdout && isFile(stdin, out) {
 		return fail(ExitUsage, "the output %s is the file standard input reads", out)
 	}
-	src, err := readSource(in, stdin)
+	src, err := readSource(in, label, stdin)
 	if err != nil {
 		return err
 	}
@@ -204,9 +204,11 @@ func notDrawn(label string, err error) error {
 	return fail(ExitNotDrawn, "%s: %s: %s", where, e.Kind, e.Msg)
 }
 
-func readSource(in string, stdin io.Reader) (string, error) {
+// readSource reads the input. One over the bound is refused in the engine's
+// form, <input>: unsupported construct: …, like the engine's own refusal of
+// a source just under the bound.
+func readSource(in, label string, stdin io.Reader) (string, error) {
 	r := stdin
-	name := "standard input"
 	if in != "-" {
 		f, err := os.Open(in)
 		if err != nil {
@@ -216,14 +218,15 @@ func readSource(in string, stdin io.Reader) (string, error) {
 		if st, err := f.Stat(); err == nil && st.IsDir() {
 			return "", fail(ExitIO, "%s is a directory", in)
 		}
-		r, name = f, in
+		r = f
 	}
 	b, err := io.ReadAll(io.LimitReader(r, maxInputBytes+1))
 	if err != nil {
-		return "", fail(ExitIO, "reading %s: %v", name, err)
+		return "", fail(ExitIO, "reading %s: %v", label, err)
 	}
 	if len(b) > maxInputBytes {
-		return "", fail(ExitNotDrawn, "%s is longer than mermaid draws (at most %d characters)", name, mr.MaxTextSize)
+		return "", fail(ExitNotDrawn, "%s: %s: the source is over %d bytes (mermaid draws at most %d characters)",
+			label, mr.UnsupportedConstruct, maxInputBytes, mr.MaxTextSize)
 	}
 	return string(b), nil
 }
