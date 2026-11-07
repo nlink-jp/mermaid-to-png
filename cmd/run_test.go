@@ -99,6 +99,38 @@ func TestDefaultOutputName(t *testing.T) {
 	}
 }
 
+// Flags may stand before or after the file name; after -- everything is a
+// file name, even one that starts with a dash.
+func TestFlagsAroundTheFileName(t *testing.T) {
+	needFont(t)
+	dir := t.TempDir()
+	in := writeInput(t, "d.mmd", flowchart)
+	for name, args := range map[string][]string{
+		"after":   {in, "-o", filepath.Join(dir, "after.png")},
+		"between": {"-scale", "1", in, "-o", filepath.Join(dir, "between.png")},
+	} {
+		r := runCLI(t, "", args...)
+		if r.code != ExitOK {
+			t.Errorf("%s: exit %d: %s", name, r.code, r.stderr)
+			continue
+		}
+		if _, err := os.Stat(filepath.Join(dir, name+".png")); err != nil {
+			t.Errorf("%s: %v", name, err)
+		}
+	}
+	dash := filepath.Join(dir, "-d.mmd")
+	if err := os.WriteFile(dash, []byte(flowchart), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(dir)
+	if r := runCLI(t, "", "-o", "dash.png", "--", "-d.mmd"); r.code != ExitOK {
+		t.Errorf("after --: exit %d: %s", r.code, r.stderr)
+	}
+	if r := runCLI(t, "", in, in); r.code != ExitUsage {
+		t.Errorf("two files: exit %d, want %d", r.code, ExitUsage)
+	}
+}
+
 func TestStdinToFile(t *testing.T) {
 	needFont(t)
 	out := filepath.Join(t.TempDir(), "out.png")

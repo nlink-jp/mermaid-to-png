@@ -68,11 +68,34 @@ func fail(status int, format string, a ...any) error {
 	return &failure{status: status, msg: fmt.Sprintf(format, a...)}
 }
 
+// parseArgs reads flags wherever they stand, before or after the file name
+// (`diagram.mmd -o out.png` as well as `-o out.png diagram.mmd`): the flag
+// package stops at the first non-flag, so parsing resumes after each one.
+// Everything after `--` is a file name.
+func parseArgs(fs *flag.FlagSet, args []string) ([]string, error) {
+	var files []string
+	for {
+		if err := fs.Parse(args); err != nil {
+			return nil, err
+		}
+		rest := fs.Args()
+		if len(rest) == 0 {
+			return files, nil
+		}
+		if used := len(args) - len(rest); used > 0 && args[used-1] == "--" {
+			return append(files, rest...), nil
+		}
+		files = append(files, rest[0])
+		args = rest[1:]
+	}
+}
+
 func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	var o options
 	fs := NewFlagSet(&o)
 	fs.SetOutput(io.Discard)
-	if err := fs.Parse(args); err != nil {
+	files, err := parseArgs(fs, args)
+	if err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			fmt.Fprintln(stdout, usageLine)
 			fs.SetOutput(stdout)
@@ -86,7 +109,7 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stdout, "mermaid-to-png", Version)
 		return ExitOK
 	}
-	if err := convert(&o, fs.Args(), stdin, stdout); err != nil {
+	if err := convert(&o, files, stdin, stdout); err != nil {
 		fmt.Fprintf(stderr, "mermaid-to-png: %s\n", err)
 		var f *failure
 		if errors.As(err, &f) {
