@@ -102,9 +102,11 @@ test:
 
 SKILLS_DEST ?= $(HOME)/.claude/skills
 SKILL_NAME  := mermaid-to-png
-SKILL_ZIP   := $(DIST)/$(SKILL_NAME)-skill-$(VERSION).zip
+SKILL_ZIP   := $(DIST)/$(SKILL_NAME)-$(VERSION).zip
 
-## package-skill: zip the bundled skill → dist/mermaid-to-png-skill-<version>.zip.
+## package-skill: zip the bundled skill → dist/mermaid-to-png-<version>.zip
+## (<skill>-vX.Y.Z.zip, the organization's skill zip name; the binary
+## archives carry the platform, <name>-vX.Y.Z-<os>-<arch>).
 ## The zip's root is the skill folder — the layout the app's skill registration
 ## accepts and the skills-series repositories ship. A separate release asset.
 package-skill:
