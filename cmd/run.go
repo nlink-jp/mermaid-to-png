@@ -159,6 +159,9 @@ func convert(o *options, args []string, stdin io.Reader, stdout io.Writer) error
 	if !fromStdin && !toStdout && samePath(in, out) {
 		return fail(ExitUsage, "the output %s is the input itself", out)
 	}
+	if fromStdin && !toStdout && isFile(stdin, out) {
+		return fail(ExitUsage, "the output %s is the file standard input reads", out)
+	}
 	src, err := readSource(in, stdin)
 	if err != nil {
 		return err
@@ -261,6 +264,19 @@ func writeFile(path string, data []byte) error {
 		return fail(ExitIO, "writing %s: %v", path, err)
 	}
 	return nil
+}
+
+// isFile reports whether r is an open file that is the file at path. A
+// redirect (< diagram.mmd) is such a file; a pipe from cat cannot be told
+// apart from any other pipe and is not.
+func isFile(r io.Reader, path string) bool {
+	f, ok := r.(*os.File)
+	if !ok {
+		return false
+	}
+	a, err1 := f.Stat()
+	b, err2 := os.Stat(path)
+	return err1 == nil && err2 == nil && os.SameFile(a, b)
 }
 
 func samePath(a, b string) bool {

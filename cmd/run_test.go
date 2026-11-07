@@ -131,6 +131,27 @@ func TestFlagsAroundTheFileName(t *testing.T) {
 	}
 }
 
+// `-o d.mmd < d.mmd` would replace the source with the PNG: refused, and the
+// source is left as it was.
+func TestOutputIsStdinFile(t *testing.T) {
+	in := writeInput(t, "d.mmd", flowchart)
+	f, err := os.Open(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	var out, errb bytes.Buffer
+	if code := Run([]string{"-o", in}, f, &out, &errb); code != ExitUsage {
+		t.Fatalf("exit %d, want %d (%s)", code, ExitUsage, errb.String())
+	}
+	if !strings.Contains(errb.String(), "standard input reads") {
+		t.Errorf("stderr %q", errb.String())
+	}
+	if b, _ := os.ReadFile(in); string(b) != flowchart {
+		t.Errorf("the source was overwritten")
+	}
+}
+
 func TestStdinToFile(t *testing.T) {
 	needFont(t)
 	out := filepath.Join(t.TempDir(), "out.png")
