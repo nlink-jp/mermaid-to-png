@@ -182,3 +182,12 @@ mermaid-to-png -version
 7. **プラットフォーム**: 第 1 稿は darwin/arm64 だけとしたが、比べる相手（report-studio-mcp・agent-report）は構造的に
    macOS に縛られていて理由にならないと指摘された。CLI は純粋な Go で `-font` があれば他の OS でも描けるので、
    util-series の通常の 4 プラットフォームにする。
+8. **第 2 段階の実地確認（2026-11-07）**: 開発版（624a2fd）を `~/.local/bin` に置き、スキルは利用者がアプリから登録した。
+   この RFP のセッションから新しいセッションを 2 つ起こし、ツールの名前も試験であることも書かない普段どおりの依頼をした。
+   - 場面 1（gem-agent の MCP の流れを図にして PNG に）: 最初にスキルを読み込み、`mermaid-to-png` で描き、画像を見て
+     注記の形に直して描き直した。
+   - 場面 2（型の関係を `classDiagram` で PNG に）: スキルを読み込み、クラス図を受け付けるかを先に小さな図で試し、
+     `unsupported diagram type` で止まると、選択肢（flowchart で描き直す・コードブロックのまま渡す・ER 図）を示して判断を
+     求めた。利用者が flowchart を選ぶと、描き直して PNG にした。
+   - どちらの場面でも、Chrome・npx・mmdc・CDN・kroki・mermaid.ink・SVG の手描きには一度も手を伸ばさなかった
+     （セッション記録のツール呼び出しで確認）。スキルの文面は変えていない。

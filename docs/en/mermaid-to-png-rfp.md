@@ -191,3 +191,13 @@ engine and does not hold distributed tools.
 7. **Platforms**: the first draft said darwin/arm64 only; a review pointed out that the precedents (report-studio-mcp,
    agent-report) are bound to macOS by structure and do not justify it. The CLI is pure Go and draws on other systems with
    `-font`, so it takes util-series' usual 4 platforms.
+8. **Phase 2 check in the field (2026-11-07)**: a development build (624a2fd) was put in `~/.local/bin`, and the user
+   registered the skill through the app. Two new sessions were started from this RFP's session with ordinary requests
+   that named neither the tool nor the trial.
+   - Scene 1 (draw gem-agent's MCP flow as a PNG): it loaded the skill first, drew with `mermaid-to-png`, looked at the
+     image and redrew it with notes.
+   - Scene 2 (the types' relations as a `classDiagram` PNG): it loaded the skill, tried a small class diagram first, and
+     when it stopped at `unsupported diagram type` it offered choices (redraw as a flowchart, hand over the code block,
+     an ER diagram) and asked. When the user chose the flowchart, it redrew it and made the PNG.
+   - In neither scene did it reach for Chrome, npx, mmdc, a CDN, kroki, mermaid.ink or hand-drawn SVG (checked against
+     the tool calls in the session transcripts). The skill's wording was not changed.
