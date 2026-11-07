@@ -231,6 +231,10 @@ func readSource(in, label string, stdin io.Reader) (string, error) {
 	return string(b), nil
 }
 
+// defaultFont loads the engine's default faces; a variable so a test can
+// stand in for a system without Hiragino.
+var defaultFont = raster.DefaultFont
+
 func loadFont(spec raster.FontSpec) (*raster.Font, error) {
 	var (
 		f   *raster.Font
@@ -239,11 +243,11 @@ func loadFont(spec raster.FontSpec) (*raster.Font, error) {
 	if spec.Path != "" {
 		f, err = raster.LoadFont(spec)
 	} else {
-		f, err = raster.DefaultFont()
+		f, err = defaultFont()
 	}
 	if err != nil {
 		if spec.Path == "" {
-			return nil, fail(ExitIO, "font: the default font (Hiragino Sans) cannot be loaded: %v; give one with -font", err)
+			return nil, fail(ExitIO, "the default font (Hiragino Sans) cannot be loaded (%v); give one with -font", err)
 		}
 		return nil, fail(ExitIO, "%v", err) // the engine's message names the font
 	}

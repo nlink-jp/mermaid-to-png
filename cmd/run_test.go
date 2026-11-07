@@ -16,8 +16,8 @@ var pngMagic = []byte("\x89PNG\r\n\x1a\n")
 const flowchart = "flowchart TD\n  A[開始] --> B{判定}\n  B -->|はい| C[終わり]\n"
 
 // needFont skips a drawing test where the default font (Hiragino) is absent:
-// the engine cannot draw there without -font, which TestDefaultFontMissing
-// covers by its exit status instead.
+// the engine cannot draw there without -font. TestDefaultFontMissing covers
+// that system by standing in for the default font.
 func needFont(t *testing.T) {
 	t.Helper()
 	if _, err := raster.DefaultFont(); err != nil {
@@ -344,8 +344,8 @@ func TestTooLong(t *testing.T) {
 	}
 	at := runCLI(t, src(maxInputBytes), "-o", "-")
 	want := "mermaid-to-png: <stdin>: " + mr.UnsupportedConstruct.String() + ": the source is "
-	if at.code != ExitNotDrawn || !strings.HasPrefix(at.stderr, want) {
-		t.Errorf("at the bound: exit %d, %q, want prefix %q", at.code, at.stderr, want)
+	if at.code != ExitNotDrawn || !strings.HasPrefix(at.stderr, want) || strings.HasPrefix(at.stderr, want+"over ") {
+		t.Errorf("at the bound: exit %d, %q, want the engine's refusal %q…", at.code, at.stderr, want)
 	}
 	over := runCLI(t, src(maxInputBytes+1), "-o", "-")
 	want = "mermaid-to-png: <stdin>: " + mr.UnsupportedConstruct.String() + ": the source is over "
