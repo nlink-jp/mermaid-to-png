@@ -15,6 +15,12 @@ mermaid-render は手元で mermaid を描けますが、ライブラリです�
 
 ## 入れ方
 
+コマンドとスキルは別々に入れます。Homebrew とバイナリのアーカイブにはコマンドだけが入っています。
+スキルはリリースごとに別の添付物 `mermaid-to-png-vX.Y.Z.zip`（名前にプラットフォームが付かないもの）として付き、
+zip の根にスキルのフォルダがあります。
+
+### コマンド
+
 ```bash
 brew install nlink-jp/tap/mermaid-to-png
 ```
@@ -30,6 +36,18 @@ make build          # → dist/mermaid-to-png
 macOS（arm64、署名・公証済み）、Linux（amd64・arm64）、Windows（amd64）のアーカイブは
 [リリースのページ](https://github.com/nlink-jp/mermaid-to-png/releases)にあります。
 文字はヒラギノ角ゴシックで描きます。ヒラギノは macOS にしか無いので、他の OS では `-font` でフォントを指定してください。
+
+### スキル
+
+使っているコマンドと同じリリースの `mermaid-to-png-vX.Y.Z.zip` を取ってください。
+
+- **Claude（デスクトップアプリ・claude.ai）** — カスタマイズ → スキルで zip をアップロードします。
+  更新のたびに新しい zip をアップロードし直してください。
+- **Claude Code に手で入れる場合** — `unzip mermaid-to-png-vX.Y.Z.zip -d ~/.claude/skills/`
+
+スキルは、エージェントが動く場所にコマンドがあることを前提にしています。
+クローンからの `make install-skill` は開発用の手順です。zip を作り、それを `~/.claude/skills/` に展開します
+（別の場所は `SKILLS_DEST=<dir>`）。
 
 ## 使い方
 
@@ -77,16 +95,8 @@ mermaid-render が描く 7 種類です: flowchart（`flowchart`・`graph`）、
 このリポジトリには **mermaid-to-png** スキルが付いています。中身は次のとおりです。
 このコマンドで図を描く場面、終了コードごとの対処、エンジンが構文を拒んだときの書き換え方
 （ラベルの中の HTML、入れ子の subgraph、フォントに無い文字）、そして report-studio やページ自身の mermaid.js に
-任せる場面。
+任せる場面。入れ方は[入れ方](#スキル)にあります。
 
-コマンドとスキルは別々に入れます。Homebrew とバイナリのアーカイブにはコマンドだけが入っています。
-スキルはリリースごとに別の添付物 `mermaid-to-png-skill-vX.Y.Z.zip` として付き、zip の根にスキルのフォルダがあります。
-
-- **Claude Code** — `unzip mermaid-to-png-skill-vX.Y.Z.zip -d ~/.claude/skills/`
-- **Claude（デスクトップアプリ・claude.ai）** — カスタマイズ → スキルで zip をアップロードします。更新のたびに新しい zip を
-  アップロードし直してください。スキルは、エージェントが動く場所にコマンドがあることを前提にしています。
-
-クローンからなら、`make install-skill` が zip を作って `~/.claude/skills/` に展開します（別の場所は `SKILLS_DEST=<dir>`）。
 `make test` は組織のスキル検証も走らせます。`cmd/skill_test.go` はスキルをコマンドに縛ります。スキルが名指しする
 フラグ・終了コード・エンジンの種類・図の種類はすべて実在しなければならず、スキルが勧める書き換えは、スキルのとおりに
 拒まれ、受け入れられなければなりません。

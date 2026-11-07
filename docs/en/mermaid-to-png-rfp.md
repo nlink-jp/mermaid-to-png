@@ -126,8 +126,13 @@ None (no network, outside service or credentials). The only Go dependency is `gi
 
 - README.md / README.ja.md (using the CLI, installing the skill), CHANGELOG.md, AGENTS.md.
 - The organization's release steps: create the repository, build for 4 platforms (darwin signed and notarized), each zip
-  plus the separate skill zip, `verify-release`, Homebrew formula, util-series submodule and catalogue row, organization
-  profile, website card, knowledge feedback, check-org.
+  plus the separate skill zip (`mermaid-to-png-vX.Y.Z.zip`, the organization's skill zip name), `verify-release`,
+  Homebrew formula, util-series submodule and catalogue row, organization profile, website card, knowledge feedback,
+  check-org. The catalogue rows list the skill as part of the tool ("bundled mermaid-to-png skill", CONVENTIONS §Skill
+  bundled with a tool).
+- The README's Installation section leads the skill with the app's registration, keeps unzipping into
+  `~/.claude/skills/` as the fallback, and describes `make install-skill` as the development loop (CONVENTIONS §Skill
+  project scaffold).
 - One independent verification pass before release.
 
 **Independently reviewable points**: the RFP / end of Phase 1 / before release.

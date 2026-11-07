@@ -17,6 +17,13 @@ locally, but it is a library. This is its command.
 
 ## Installation
 
+The command and the skill install separately: Homebrew and the binary
+archives carry the command only, and every release attaches the skill as its
+own asset, `mermaid-to-png-vX.Y.Z.zip` (no platform in the name), with the
+skill folder at the zip's root.
+
+### The command
+
 ```bash
 brew install nlink-jp/tap/mermaid-to-png
 ```
@@ -34,6 +41,18 @@ arm64) and Windows (amd64) are on the
 [releases page](https://github.com/nlink-jp/mermaid-to-png/releases).
 Text is drawn in Hiragino Sans, which only macOS has: elsewhere, give a font
 with `-font`.
+
+### The skill
+
+Take `mermaid-to-png-vX.Y.Z.zip` from the release that matches your command.
+
+- **Claude (desktop app / claude.ai)** — Customize → Skills → upload the zip.
+  Upload the new zip again after each update.
+- **Claude Code, by hand** — `unzip mermaid-to-png-vX.Y.Z.zip -d ~/.claude/skills/`
+
+The skill needs the command where the agent runs. From a clone,
+`make install-skill` is the development loop: it builds the zip and unpacks
+that into `~/.claude/skills/` (`SKILLS_DEST=<dir>` for another directory).
 
 ## Usage
 
@@ -86,21 +105,10 @@ The repository bundles the **mermaid-to-png** skill: when to draw a diagram
 with this command, how to act on each exit status, what to rewrite when the
 engine refuses a construct (HTML in a label, a nested subgraph, a character
 the font lacks), and when the work belongs to report-studio or to a page's
-own mermaid.js instead.
+own mermaid.js instead. How to install it is under
+[Installation](#the-skill).
 
-The command and the skill install separately: Homebrew and the binary
-archives carry the command only. Every release attaches the skill as its own
-asset, `mermaid-to-png-skill-vX.Y.Z.zip`, with the skill folder at the zip's
-root.
-
-- **Claude Code** — `unzip mermaid-to-png-skill-vX.Y.Z.zip -d ~/.claude/skills/`
-- **Claude (desktop app / claude.ai)** — Customize → Skills → upload the zip,
-  and upload the new zip again after each update. The skill needs the command
-  where the agent runs.
-
-From a clone, `make install-skill` builds the zip and unpacks it into
-`~/.claude/skills/` (`SKILLS_DEST=<dir>` for another directory). `make test`
-runs the organization's skill validator, and `cmd/skill_test.go` holds the
+`make test` runs the organization's skill validator, and `cmd/skill_test.go` holds the
 skill to the command: every flag, exit status, engine kind and type it names
 must exist, and the rewrites it recommends must be refused and accepted as it
 says.

@@ -120,9 +120,12 @@ mermaid-to-png -version
 ### 第 3 段階: リリース
 
 - README.md / README.ja.md（CLI の使い方、スキルの入れ方）、CHANGELOG.md、AGENTS.md。
-- 組織の手順どおり: リポジトリの作成、4 プラットフォームのビルド（darwin の署名・公証）、各 zip と別添のスキル zip、
-  `verify-release`、Homebrew の formula、util-series への submodule とカタログ行、組織のプロフィール、Web サイトのカード、
-  knowledge への還元、check-org。
+- 組織の手順どおり: リポジトリの作成、4 プラットフォームのビルド（darwin の署名・公証）、各 zip と別添のスキル zip
+  （`mermaid-to-png-vX.Y.Z.zip`、組織のスキル zip の名前）、`verify-release`、Homebrew の formula、util-series への
+  submodule とカタログ行、組織のプロフィール、Web サイトのカード、knowledge への還元、check-org。カタログの行には、
+  スキルをツールの一部として載せる（「bundled mermaid-to-png skill」、CONVENTIONS §Skill bundled with a tool）。
+- README の入れ方の節は、スキルについてアプリでの登録を先に、`~/.claude/skills/` への展開を代わりの手段として書き、
+  `make install-skill` は開発用の手順として書く（CONVENTIONS §Skill project scaffold）。
 - リリース前に独立検証を 1 本。
 
 **単独でレビューできる区切り**: RFP／第 1 段階の終わり／リリース前。
