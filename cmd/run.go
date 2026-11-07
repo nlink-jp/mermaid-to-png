@@ -155,7 +155,10 @@ func convert(o *options, args []string, stdin io.Reader, stdout io.Writer) error
 		}
 		out = strings.TrimSuffix(in, filepath.Ext(in)) + ".png"
 	}
-	toStdout := out == "-"
+	// An output that is the file standard output already writes to
+	// (-o /dev/stdout) is written as -o - is: through the open stream, with
+	// no path line after the PNG and no reopening that could truncate it.
+	toStdout := out == "-" || sameOpenFile(stdout, out)
 	if !fromStdin && !toStdout && samePath(in, out) {
 		return fail(ExitUsage, "the output %s is the input itself", out)
 	}
@@ -273,11 +276,27 @@ func writeFile(path string, data []byte) error {
 	return nil
 }
 
-// isFile reports whether r is an open file that is the file at path. A
-// redirect (< diagram.mmd) is such a file; a pipe from cat cannot be told
-// apart from any other pipe and is not.
+// isFile reports whether r is an open regular file that is the file at path:
+// a redirect (< diagram.mmd) the output would overwrite. A pipe cannot be
+// told apart from any other pipe, and a device (/dev/null, a terminal) is not
+// overwritten by writing to it, so neither counts.
 func isFile(r io.Reader, path string) bool {
 	f, ok := r.(*os.File)
+	if !ok {
+		return false
+	}
+	a, err := f.Stat()
+	if err != nil || !a.Mode().IsRegular() {
+		return false
+	}
+	b, err := os.Stat(path)
+	return err == nil && os.SameFile(a, b)
+}
+
+// sameOpenFile reports whether w is an open file that is the file at path,
+// of any kind: /dev/stdout names whatever standard output is.
+func sameOpenFile(w io.Writer, path string) bool {
+	f, ok := w.(*os.File)
 	if !ok {
 		return false
 	}

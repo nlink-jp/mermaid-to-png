@@ -129,17 +129,24 @@ func TestSkillRewritesHold(t *testing.T) {
 		{"line break", "", "flowchart TD\n  A[\"行1<br>行2\"] --> B\n"},
 		{"Markdown string", "flowchart TD\n  A[\"`**md**`\"] --> B\n", "flowchart TD\n  A[\"md\"] --> B\n"},
 		{"markdown formatting", "mindmap\n  root\n    **b**\n", "mindmap\n  root\n    b\n"},
+		{"nested subgraph", "flowchart TD\n  subgraph X\n    subgraph Y\n      a --> b\n    end\n  end\n", ""},
+		{"HTML in a label", "flowchart TD\n  A[\"<code>x</code>\"] --> B\n", ""},
 		{"nested subgraph", "flowchart TD\n  subgraph X\n    subgraph Y\n      a --> b\n    end\n  end\n",
 			"flowchart TD\n  subgraph X\n    a\n  end\n  subgraph Y\n    b\n  end\n  a --> b\n"},
-		{"glyph", "flowchart TD\n  A[次へ ➔] --> B\n", "flowchart TD\n  A[次へ →] --> B\n"},
+		{"no font can draw", "flowchart TD\n  A[次へ ➔] --> B\n", "flowchart TD\n  A[次へ →] --> B\n"},
 		{"styling is set aside", "", "%%{init: {\"theme\":\"dark\"}}%%\nflowchart TD\n  A --> B\n  style A fill:#f00\n  classDef c fill:#0f0\n"},
 	}
 	for _, c := range cases {
 		if c.refused != "" {
 			r := runCLI(t, c.refused, "-o", "-")
-			if r.code != ExitNotDrawn || !strings.Contains(r.stderr, mr.UnsupportedConstruct.String()) {
+			// The case name is the engine's own words, which the skill quotes.
+			if r.code != ExitNotDrawn || !strings.Contains(r.stderr, mr.UnsupportedConstruct.String()+": ") ||
+				!strings.Contains(strings.ToLower(r.stderr), strings.ToLower(c.name)) {
 				t.Errorf("%s: refused source gave exit %d, %q", c.name, r.code, r.stderr)
 			}
+		}
+		if c.accepted == "" {
+			continue
 		}
 		if r := runCLI(t, c.accepted, "-o", "-"); r.code != ExitOK {
 			t.Errorf("%s: the rewrite does not draw: exit %d, %q", c.name, r.code, r.stderr)

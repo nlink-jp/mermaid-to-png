@@ -122,6 +122,42 @@ func TestOutputLinksToInput(t *testing.T) {
 	}
 }
 
+// An output that is the file standard output writes to is written through
+// the stream, with nothing after the PNG.
+func TestOutputIsStdoutFile(t *testing.T) {
+	needFont(t)
+	dst := filepath.Join(t.TempDir(), "out.png")
+	f, err := os.Create(dst)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var errb bytes.Buffer
+	code := Run([]string{"-o", dst}, strings.NewReader(flowchart), f, &errb)
+	f.Close()
+	if code != ExitOK {
+		t.Fatalf("exit %d: %s", code, errb.String())
+	}
+	b, _ := os.ReadFile(dst)
+	if _, err := png.Decode(bytes.NewReader(b)); err != nil || !bytes.HasSuffix(b, []byte("IEND\xaeB`\x82")) {
+		t.Errorf("not exactly one PNG (%v, last bytes %q)", err, b[max(0, len(b)-16):])
+	}
+}
+
+// A device on standard input (/dev/null) is not a file the output could
+// overwrite: the run reaches the engine, which finds no diagram.
+func TestDeviceStdinIsNotTheOutput(t *testing.T) {
+	needFont(t)
+	null, err := os.Open(os.DevNull)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer null.Close()
+	var out, errb bytes.Buffer
+	if code := Run([]string{"-o", os.DevNull}, null, &out, &errb); code != ExitNotDrawn {
+		t.Errorf("exit %d, want %d (%s)", code, ExitNotDrawn, errb.String())
+	}
+}
+
 // Each I/O failure says which thing failed, not only that one did.
 func TestIOErrorMessages(t *testing.T) {
 	needFont(t)
