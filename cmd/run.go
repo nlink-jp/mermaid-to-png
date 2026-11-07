@@ -221,44 +221,21 @@ func loadFont(spec raster.FontSpec) (*raster.Font, error) {
 	return f, nil
 }
 
-// writeFile writes the PNG beside its destination and renames it into place,
-// so a failed run never leaves a half-written file. A destination that exists
-// and is not a regular file (/dev/null, a named pipe) is written directly:
-// it cannot be replaced by a rename.
+// writeFile writes the PNG to its destination the way a shell's > does: an
+// existing file keeps its permissions, links and ownership, a read-only one
+// is refused, and a new one gets 0666 less the umask. The PNG is complete in
+// memory before the file is opened, so only the disk itself can fail midway.
 func writeFile(path string, data []byte) error {
-	if st, err := os.Stat(path); err == nil && !st.Mode().IsRegular() {
-		f, err := os.OpenFile(path, os.O_WRONLY|os.O_TRUNC, 0)
-		if err == nil {
-			_, err = f.Write(data)
-			if cerr := f.Close(); err == nil {
-				err = cerr
-			}
-		}
-		if err != nil {
-			return fail(ExitIO, "writing %s: %v", path, err)
-		}
-		return nil
-	}
-	dir := filepath.Dir(path)
-	tmp, err := os.CreateTemp(dir, ".mermaid-to-png-*")
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o666)
 	if err != nil {
 		return fail(ExitIO, "writing %s: %v", path, err)
 	}
-	name := tmp.Name()
-	_, werr := tmp.Write(data)
-	cerr := tmp.Close()
-	if werr == nil {
-		werr = cerr
+	_, err = f.Write(data)
+	if cerr := f.Close(); err == nil {
+		err = cerr
 	}
-	if werr == nil {
-		werr = os.Chmod(name, 0o644)
-	}
-	if werr == nil {
-		werr = os.Rename(name, path)
-	}
-	if werr != nil {
-		os.Remove(name)
-		return fail(ExitIO, "writing %s: %v", path, werr)
+	if err != nil {
+		return fail(ExitIO, "writing %s: %v", path, err)
 	}
 	return nil
 }

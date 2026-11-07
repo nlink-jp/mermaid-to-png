@@ -113,8 +113,63 @@ func TestStdinToFile(t *testing.T) {
 	assertPNG(t, b)
 }
 
-// A destination that is not a regular file is written in place: the
-// write-beside-and-rename that protects regular files cannot replace it.
+// The output is written the way a shell's > writes: an existing file keeps
+// its mode and stays the same file, a link is written through, and a
+// read-only file is refused and left as it was.
+func TestExistingOutput(t *testing.T) {
+	needFont(t)
+	dir := t.TempDir()
+	in := writeInput(t, "d.mmd", flowchart)
+
+	priv := filepath.Join(dir, "priv.png")
+	if err := os.WriteFile(priv, []byte("old"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	before, _ := os.Stat(priv)
+	if r := runCLI(t, "", "-o", priv, in); r.code != ExitOK {
+		t.Fatalf("existing file: exit %d: %s", r.code, r.stderr)
+	}
+	after, _ := os.Stat(priv)
+	if after.Mode().Perm() != 0o600 {
+		t.Errorf("mode became %v, want 0600", after.Mode().Perm())
+	}
+	if !os.SameFile(before, after) {
+		t.Errorf("the destination was replaced by another file")
+	}
+
+	target := filepath.Join(dir, "target.png")
+	link := filepath.Join(dir, "link.png")
+	if err := os.WriteFile(target, []byte("old"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(target, link); err != nil {
+		t.Fatal(err)
+	}
+	if r := runCLI(t, "", "-o", link, in); r.code != ExitOK {
+		t.Fatalf("symlink: exit %d: %s", r.code, r.stderr)
+	}
+	if st, _ := os.Lstat(link); st.Mode()&os.ModeSymlink == 0 {
+		t.Errorf("the link was replaced by a regular file")
+	}
+	b, _ := os.ReadFile(target)
+	assertPNG(t, b)
+
+	ro := filepath.Join(dir, "ro.png")
+	if err := os.WriteFile(ro, []byte("old"), 0o444); err != nil {
+		t.Fatal(err)
+	}
+	if os.Geteuid() == 0 {
+		t.Skip("root writes read-only files")
+	}
+	if r := runCLI(t, "", "-o", ro, in); r.code != ExitIO || !strings.Contains(r.stderr, "writing "+ro) {
+		t.Errorf("read-only: exit %d, %q", r.code, r.stderr)
+	}
+	if b, _ := os.ReadFile(ro); string(b) != "old" {
+		t.Errorf("the read-only file was changed")
+	}
+}
+
+// A destination that is not a regular file is written like any other.
 func TestNonRegularOutput(t *testing.T) {
 	needFont(t)
 	r := runCLI(t, flowchart, "-o", os.DevNull)
