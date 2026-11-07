@@ -222,8 +222,23 @@ func loadFont(spec raster.FontSpec) (*raster.Font, error) {
 }
 
 // writeFile writes the PNG beside its destination and renames it into place,
-// so a failed run never leaves a half-written file.
+// so a failed run never leaves a half-written file. A destination that exists
+// and is not a regular file (/dev/null, a named pipe) is written directly:
+// it cannot be replaced by a rename.
 func writeFile(path string, data []byte) error {
+	if st, err := os.Stat(path); err == nil && !st.Mode().IsRegular() {
+		f, err := os.OpenFile(path, os.O_WRONLY|os.O_TRUNC, 0)
+		if err == nil {
+			_, err = f.Write(data)
+			if cerr := f.Close(); err == nil {
+				err = cerr
+			}
+		}
+		if err != nil {
+			return fail(ExitIO, "writing %s: %v", path, err)
+		}
+		return nil
+	}
 	dir := filepath.Dir(path)
 	tmp, err := os.CreateTemp(dir, ".mermaid-to-png-*")
 	if err != nil {

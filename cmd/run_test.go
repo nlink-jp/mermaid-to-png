@@ -113,6 +113,24 @@ func TestStdinToFile(t *testing.T) {
 	assertPNG(t, b)
 }
 
+// A destination that is not a regular file is written in place: the
+// write-beside-and-rename that protects regular files cannot replace it.
+func TestNonRegularOutput(t *testing.T) {
+	needFont(t)
+	r := runCLI(t, flowchart, "-o", os.DevNull)
+	if r.code != ExitOK {
+		t.Fatalf("exit %d: %s", r.code, r.stderr)
+	}
+}
+
+// A directory is not a destination.
+func TestDirectoryOutput(t *testing.T) {
+	needFont(t)
+	if r := runCLI(t, flowchart, "-o", t.TempDir()); r.code != ExitIO {
+		t.Errorf("exit %d, want %d (%s)", r.code, ExitIO, r.stderr)
+	}
+}
+
 // -o - writes the PNG itself to standard output, and nothing else.
 func TestStdoutOutput(t *testing.T) {
 	needFont(t)
