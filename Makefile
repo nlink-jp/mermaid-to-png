@@ -14,7 +14,7 @@ NOTARY_PROFILE    ?= nlink-jp-notary
 # Outside macOS there is no Hiragino, so the binary needs -font there (README).
 PLATFORMS := darwin/arm64 linux/amd64 linux/arm64 windows/amd64
 
-.PHONY: build build-all package verify-release verify-skill-zip test vet check package-skill install-skill uninstall-skill clean
+.PHONY: build build-all package verify-release verify-skill-zip test vet check package-skill install-skill uninstall-skill clean vuln
 
 ## build: single binary for this machine → dist/
 build:
@@ -30,10 +30,17 @@ build-all:
 	done
 	@scripts/codesign-darwin.sh $(DIST)/$(BINARY)-darwin-arm64 "$(CODESIGN_IDENTITY)" "$(BINARY)"
 
+## vuln: known vulnerabilities in the modules and the standard library this
+## build uses (govulncheck). `package` depends on it, so a release cannot be
+## built past a finding. It needs the network, and its database changes under
+## an unchanged tree: a finding can appear without a commit.
+vuln:
+	govulncheck ./...
+
 ## package: build all platforms, archive with the canonical binary name inside,
 ## and notarize the darwin build. Also builds the skill zip (package-skill):
 ## every release carries both.
-package: build-all package-skill
+package: vuln build-all package-skill
 	@cd $(DIST) && for p in $(PLATFORMS); do os=$${p%/*}; arch=$${p#*/}; \
 		ext=""; [ "$$os" = windows ] && ext=".exe"; \
 		stage=_pkg; rm -rf $$stage; mkdir -p $$stage; \

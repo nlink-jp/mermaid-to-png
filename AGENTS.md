@@ -22,6 +22,7 @@ make test             # go test ./... + tests/validate-skill.sh
 make vet              # go vet ./...
 make check            # vet + test + build
 make package          # 4 platforms, archives, darwin notarized, skill zip
+make vuln             # govulncheck over the build; `make package` runs it first and stops on a finding
 make verify-release   # also runs verify-skill-zip
 make brew             # after package: generate the formula into the local homebrew-tap checkout
 make brew-print       # render the formula to stdout only
